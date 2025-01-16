@@ -23,7 +23,7 @@ def land():
 @app.route("/start_mission")
 def start_mission():
     mission.drone.connect()  # Connecte le drone sans le faire décoller
-    return "Drone connecté et prêt pour la mission."
+    return "Drone connectée et prêt pour la mission."
 
 @app.route("/end_mission")
 def end_mission():
