@@ -1,2 +1,9 @@
 # GenieLog-AIRBOSS
-Petite description
+
+application de controle d’un drone
+
+## installation  
+
+### Prérequis
+
+
