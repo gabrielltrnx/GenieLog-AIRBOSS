@@ -41,5 +41,6 @@ def telemetry():
     data = mission.get_telemetry()
     return jsonify(data)
 
+
 if __name__ == "__main__":
     app.run(debug=True)

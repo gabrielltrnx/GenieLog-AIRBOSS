@@ -29,7 +29,7 @@ class Mission:
 
     def get_telemetry(self):
         if self.drone.is_flying:
-            data = {
+            return {
                 'hauteur': 100,    # en mètres
                 'distance': 500,   # en mètres
                 'vitesse': 20,     # en m/s
@@ -37,7 +37,7 @@ class Mission:
                 'autonomie': 75    # en pourcentage
             }
         else:
-            data = {
+            return {
                 'hauteur': 0,      # en mètres
                 'distance': 0,     # en mètres
                 'vitesse': 0,      # en m/s
