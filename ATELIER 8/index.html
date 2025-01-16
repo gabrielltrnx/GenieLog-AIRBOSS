@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 50px;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        .sidebar.expanded {
+            width: 250px;
+        }
+
+        .main-content {
+            flex: 1;
+            background-color: #808080;
+            min-height: 600px;
+            position: relative;
+            border-radius: 4px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .menu-toggle {
+            background-color: #007BFF;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .button {
+            background-color: #007BFF;
+            color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 4px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .info-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background-color: white;
+            padding: 10px;
+            flex: 1;
+            border-radius: 4px;
+        }
+
+        .video-container {
+            position: relative;
+            height: 100%;
+        }
+
+        .no-signal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .title {
+            color: #666;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+
+        .value {
+            font-weight: bold;
+        }
+
+        .buttons-container {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.expanded .buttons-container {
+            opacity: 1;
+        }
+
+        .terminal {
+            background-color: #1e1e1e;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px;
+            border-radius: 4px;
+            height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .sidebar.expanded .terminal {
+            opacity: 1;
+        }
+
+        .terminal-message {
+            margin: 4px 0;
+        }
+
+        .terminal-message.info {
+            color: #4CAF50;
+        }
+
+        .terminal-message.warning {
+            color: #FFC107;
+        }
+
+        .terminal-message.error {
+            color: #f44336;
+        }
+
+        /* Flux vidéo style */
+        .video-stream {
+            width: 100%;
+            height: 100%;
+            background-color: black;
+        }
+
+        .no-video {
+            color: #fff;
+            font-size: 1.5em;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-bar">
+        <div class="info-box">
+            <div class="title">Hauteur</div>
+            <div class="value" id="hauteur">Connexion...</div>
+        </div>
+        <div class="info-box">
+            <div class="title">Distance</div>
+            <div class="value" id="distance">Connexion...</div>
+        </div>
+        <div class="info-box">
+            <div class="title">Vitesse</div>
+            <div class="value" id="vitesse">Connexion...</div>
+        </div>
+        <div class="info-box">
+            <div class="title">Durée de vol</div>
+            <div class="value" id="duree">Connexion...</div>
+        </div>
+        <div class="info-box">
+            <div class="title">Autonomie</div>
+            <div class="value" id="autonomie">Connexion...</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            <div class="buttons-container">
+                <div class="terminal" id="terminal">
+                    <div class="terminal-message">Initialisation du système...</div>
+                </div>
+                <button class="button" onclick="sendCommand('takeoff')">Décoller</button>
+                <button class="button" onclick="sendCommand('land')">Atterrir</button>
+                <button class="button" onclick="sendCommand('start_mission')">Démarrer Mission</button>
+                <button class="button" onclick="sendCommand('end_mission')">Fin de Mission</button>
+                <!-- Ajout du bouton pour activer le flux vidéo -->
+                <button class="button" onclick="toggleVideoStream()">Flux Vidéo</button>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="video-container" id="video-container">
+                <div id="video-stream" class="no-video">Pas de signal vidéo</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('expanded');
+        }
+
+        function addTerminalMessage(message, type = 'info') {
+            const terminal = document.getElementById('terminal');
+            const messageElement = document.createElement('div');
+            messageElement.className = `terminal-message ${type}`;
+            messageElement.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            terminal.appendChild(messageElement);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function sendCommand(command) {
+            console.log(`Commande envoyée: ${command}`);
+            addTerminalMessage(`Commande envoyée: ${command}`);
+            
+            fetch(`/${command}`)
+                .then(response => response.text())
+                .then(data => {
+                    addTerminalMessage(data);
+                    updateDroneData();  // Mettre à jour la télémétrie après l'action
+                });
+        }
+
+        function updateDroneData() {
+            fetch('/telemetry')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('hauteur').textContent = `${data.hauteur}m`;
+                    document.getElementById('distance').textContent = `${data.distance}m`;
+                    document.getElementById('vitesse').textContent = `${data.vitesse}m/s`;
+                    document.getElementById('duree').textContent = `${data.duree}`;
+                    document.getElementById('autonomie').textContent = `${data.autonomie}%`;
+                });
+        }
+
+        function updateDroneStatus() {
+            fetch('/status')
+                .then(response => response.text())
+                .then(data => {
+                    addTerminalMessage(`Statut du drone: ${data}`);
+                });
+        }
+
+        function toggleVideoStream() {
+            const videoStream = document.getElementById('video-stream');
+            if (videoStream.classList.contains('no-video')) {
+                videoStream.classList.remove('no-video');
+                videoStream.innerHTML = '<div class="video-stream"></div>';  // Placeholder for video stream
+            } else {
+                videoStream.classList.add('no-video');
+                videoStream.innerHTML = 'Pas de signal vidéo';  // Reset the message
+            }
+        }
+
+        setInterval(updateDroneStatus, 2000);
+        setInterval(updateDroneData, 2000);
+    </script>
+</body>
+</html>
